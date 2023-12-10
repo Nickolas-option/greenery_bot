@@ -4,7 +4,7 @@ import random
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
-API_TOKEN = '6758375137:AAEPtCHFNT2r9I2ss8yEYL_sFLdq_nNMErk'
+API_TOKEN = '6758375137:AAFosYicJRZd5C6AJYlzojaoxHAdpEOlTNM'
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
