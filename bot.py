@@ -3,19 +3,25 @@ import json
 import logging
 import os
 import random
+import yahoo_fin.stock_info as si
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+from io import BytesIO
 from yahoo_fin import stock_info
-
 from aiogram import Bot, Dispatcher, types
+from aiogram.utils.markdown import code
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-    
+
 # Logger initialization and logging level setting
 log = logging.getLogger(__name__)
 log.setLevel(os.environ.get('LOGGING_LEVEL', 'INFO').upper())
-API_TOKEN = 'TOKEN'
+API_TOKEN = '6758375137:AAFosYicJRZd5C6AJYlzojaoxHAdpEOlTNM'
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
+# Темная тема для графиков
+plt.style.use('dark_background')
 
 # Handlers
 async def welcome(message: types.Message):
@@ -27,7 +33,8 @@ async def welcome(message: types.Message):
 async def help_command(message: types.Message):
     help_text = "Доступные команды:\n\n" \
                 "/start - Начать взаимодействие 💰\n" \
-                "/getprice - Получить текущую стоимость акции 👀\n" \
+                "/moment_price - Получить текущую стоимость акции 👀\n" \
+                "/stock_history - Получить текущую стоимость акции 👀\n" \
                 "/parrot - Посмотреть на попугая 🦜\n" \
                 "/help - Показать это сообщение 🤯"
     await message.answer(help_text)
@@ -65,9 +72,10 @@ async def get_stock_price(message: types.Message):
 
     except IndexError:
         # Если пользователь не предоставил символ акции
-        error_message = "Пожалуйста, укажите тикер акции после команды /getprice. Например: \n" \
-                        "/getprice AAPL"
-        await bot.send_message(message.chat.id, error_message)
+        error_message = "Пожалуйста, укажите тикер акции после команды /moment_price.\n" \
+                        f"Например: <code>/moment_price AAPL</code>"
+        await bot.send_message(message.chat.id, error_message, parse_mode="HTML")
+
 
     except Exception as e:
         # Если произошла ошибка при получении цены акции
@@ -75,6 +83,51 @@ async def get_stock_price(message: types.Message):
         await bot.send_message(message.chat.id, error_message)
         logging.error(error_message)
 
+
+async def get_stock_history(message: types.Message):
+    try:
+        # Получаем символ акции и количество дней из сообщения пользователя
+        command_parts = message.text.split()
+        if len(command_parts) != 3:
+            raise ValueError("Неверная команда. Используйте /stock_history SYMBOL DAYS")
+
+        stock_symbol = command_parts[1].upper()
+        num_days = int(command_parts[2])
+
+        # Получаем исторические цены акции за указанное количество дней
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=num_days)
+        historical_prices = si.get_data(stock_symbol, start_date, end_date)
+
+        # Строим график исторических цен
+        plot_title = f"История цен акции {stock_symbol} за последние {num_days} дней"
+        plt.figure(figsize=(10, 6))
+        plt.plot(historical_prices.index, historical_prices['close'], marker='o', linestyle='-')
+        plt.title(plot_title)
+        plt.xlabel('Дата')
+        plt.ylabel('Цена закрытия ($)')
+        plt.grid(True)
+
+        # Сохраняем график в объект BytesIO
+        img_buffer = BytesIO()
+        plt.savefig(img_buffer, format='png')
+        img_buffer.seek(0)
+
+        # Отправляем график как фото пользователю
+        await bot.send_photo(message.chat.id, photo=img_buffer)
+
+        # Закрываем график для освобождения ресурсов
+        plt.close()
+
+    except ValueError as ve:
+        # Обрабатываем ошибку неверной команды
+        error_message = "Пожалуйста, укажите акцию и количество дней, за которое вас интересует её график.\n" \
+                        f"Например: <code>/stock_history TSLA 14</code>"
+        await bot.send_message(message.chat.id, error_message, parse_mode="HTML")
+
+    except Exception as e:
+        # Обрабатываем другие исключения (например, ошибки при получении данных)
+        await message.reply(f"Произошла ошибка: {e}")
 
 
 async def unknown_message(message: types.Message):
@@ -89,7 +142,8 @@ async def register_handlers(dp: Dispatcher):
     dp.register_message_handler(welcome, commands=['start'])
     dp.register_message_handler(help_command, commands=['help'])
     dp.register_message_handler(send_random_parrot, commands=['parrot'])
-    dp.register_message_handler(get_stock_price, commands=['getprice'])
+    dp.register_message_handler(get_stock_price, commands=['moment_price'])
+    dp.register_message_handler(get_stock_history, commands=['stock_history'])
     dp.register_message_handler(unknown_message)
 
     log.debug('Handlers are registered.')
