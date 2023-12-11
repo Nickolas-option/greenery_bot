@@ -12,7 +12,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 # Logger initialization and logging level setting
 log = logging.getLogger(__name__)
 log.setLevel(os.environ.get('LOGGING_LEVEL', 'INFO').upper())
-API_TOKEN = '6758375137:AAFosYicJRZd5C6AJYlzojaoxHAdpEOlTNM'
+API_TOKEN = 'TOKEN'
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
