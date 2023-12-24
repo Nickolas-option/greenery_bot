@@ -17,13 +17,13 @@ def display_stranges(user_id):
             prev_row = df2.iloc[-2]
             price2 = prev_row['open']
             if price > (price2 * 1.05):
-                print(f"Цена по акции {df.iloc[i, 0]} возросла больше чем на 5%!\n")
+                bot.send_message(chat_id=user_id, text=f"Цена акции {df.iloc[i, 0]} взлетела на 5%!\n")
             if price < (price2 * 0.95):
-                print(f"Цена по акции {df.iloc[i, 0]} упала больше чем на 5%!\n")
+                bot.send_message(chat_id=user_id, text=f"Цена акции {df.iloc[i, 0]} упала на 5%!\n")
             if price == df2['open'].rolling(10).min():
-                print(f"Цена по акции {df.iloc[i, 0]} самая низкая за последние 10 дней!\n")
+                bot.send_message(chat_id=USER_ID, text=f"Цена по акции {df.iloc[i, 0]} самая низкая за последние 10 дней!\n")
             if price == df2['open'].rolling(10).max():
-                print(f"Цена по акции {df.iloc[i, 0]} самая высокая за последние 10 дней!\n")
+                bot.send_message(chat_id=USER_ID, text=f"Цена по акции {df.iloc[i, 0]} самая высокая за последние 10 дней!\n")
             return price
 
 
