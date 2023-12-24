@@ -3,7 +3,7 @@ import aioschedule
 import pandas as pd
 
 
-def job(user_id, current_price):
+def display_stranges(user_id, current_price):
     df = pd.read_csv(f"{user_id}.csv")
     for i in range(1, len(df)):
         if df.iloc[i, 1] == 1:
@@ -17,9 +17,16 @@ def job(user_id, current_price):
             return price
 
 
-schedule.every().day.at("12:00").do(job)
+async def scheduler():
+    aioschedule.every().day.at("12:00").do(display_stranges)
+    while True:
+        await aioschedule.run_pending()
+        await asyncio.sleep(1)
 
+async def on_startup(_):
+    asyncio.create_task(scheduler())
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+dp = Dispatcher(bot)
+
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=False, on_startup=on_startup)
