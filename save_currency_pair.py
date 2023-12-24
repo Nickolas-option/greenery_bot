@@ -38,3 +38,25 @@ def select_currency(update: Update, context: CallbackContext):
         message = f"You have chosen {selected_currency}"
     else:
         message = f"Currency pair is not found"
+
+    context.bot.send_message(chat_id=user_id, text=message)
+
+
+def save_currencies(update: Update, context: CallbackContext):
+    user_id = update.effective_user.id
+    filename = f'{user_id}.csv'
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Currency', 'Selected'])
+        for currency, value in currencies.items():
+            writer.writerow([currency, value])
+
+    user_id = update.effective_user.id
+    context.bot.send_document(chat_id=user_id, document=open(filename, 'rb'))
+
+
+dispatcher.add_handler(CommandHandler("start", start))
+dispatcher.add_handler(CommandHandler("select", select_currency))
+dispatcher.add_handler(CommandHandler("save", save_currencies))
+
+updater.start_polling()
