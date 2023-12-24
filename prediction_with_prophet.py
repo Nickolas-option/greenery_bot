@@ -24,7 +24,7 @@ def predict(Some_currency, num_days):
 
     plot_title = f"Предсказание цен акции {Some_currency} на последующие {num_days} дней"
     plt.figure(figsize=(10, 6))
-    plt.plot(df['ds'].iloc[len(df) - num_days:len(df)] + pd.DateOffset(days=10), predicted_value['yhat'], marker='o', linestyle='-')
+    plt.plot(df['ds'].iloc[len(df) - num_days:len(df)] + pd.DateOffset(days=num_days), predicted_value['yhat'], marker='o', linestyle='-')
     plt.title(plot_title)
     plt.xlabel('Дата')
     plt.ylabel('Цена закрытия ($)')
