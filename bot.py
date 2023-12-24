@@ -1,40 +1,30 @@
 import asyncio
-from typing import Dict
-from dateutil.relativedelta import relativedelta
-import json
-from decimal import Decimal
-import logging
-import os
-from aiogram.types import Message
-import datetime
-from datetime import timedelta
-import numpy as np
-import os
-import pandas as pd
-import time
-import yahoo_fin.stock_info as si
-import random
-from aiogram import types, Dispatcher, Bot
-from datetime import datetime
 import aioschedule
-import asyncio
-from boto3.dynamodb.conditions import Key
-from decimal import Decimal, ROUND_HALF_UP
+import boto3
+import json
+import logging
+import datetime
+import numpy as np
+import pandas as pd
+import os
+import time
+import random
 import yahoo_fin.stock_info as si
 import matplotlib.pyplot as plt
-from prophet import Prophet
-from datetime import datetime, timedelta
-from io import BytesIO
-from yahoo_fin import stock_info
-from aiogram import Bot, Dispatcher, types
+from aiogram import types, Dispatcher, Bot
+from aiogram.types import Message
 from aiogram.utils.markdown import code
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-import json
-import logging
-import os
-import boto3
+from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
+from datetime import datetime, timedelta
+from decimal import Decimal, ROUND_HALF_UP
+from dateutil.relativedelta import relativedelta
+from prophet import Prophet
+from io import BytesIO
+from yahoo_fin import stock_info
+from typing import Dict
 
 dynamodb = boto3.resource(
     'dynamodb',
@@ -204,10 +194,10 @@ async def start_monitoring(message: types.Message):
 
     except IndexError:
         # Если пользователь не предоставил символ акции
-        error_message = "Пожалуйста, укажите тикер акции после команды /start_monitoring.\n" \
+        error_message = "Чтобы воспользоваться данной функцией,\n" \
+                        f"укажите тикер акции после команды /start_monitoring.\n" \
                         f"Например: <code>/start_monitoring YNDX</code>."
         await bot.send_message(message.chat.id, error_message, parse_mode="HTML")
-
 
     except Exception as e:
         # Если произошла ошибка при получении данных по акции
