@@ -5,19 +5,25 @@ import yahoo_fin.stock_info as si
 from datetime import datetime, timedelta
 
 
-def display_stranges(user_id, current_price):
+def display_stranges(user_id):
     df = pd.read_csv(f"{user_id}.csv")
     for i in range(1, len(df)):
         if df.iloc[i, 1] == 1:
             end_date = datetime.now()
-            start_date = end_date - timedelta(days=10)
-            df2 = si.get_data(df.iloc[i, 0], start_date, end_date)
+            start_date = end_date - timedelta(days=30)
+            df2 = si.get_data(df.iloc[i, 0], start_date, end_date).reset_index()
             last_row = df2.iloc[-1]
-            price = last_row[1]
-            if current_price > (price * 1.05):
+            price = last_row['open']
+            prev_row = df2.iloc[-2]
+            price2 = prev_row['open']
+            if price > (price2 * 1.05):
                 print(f"Цена по акции {df.iloc[i, 0]} возросла больше чем на 5%!\n")
-            if current_price < (price * 0.95):
+            if price < (price2 * 0.95):
                 print(f"Цена по акции {df.iloc[i, 0]} упала больше чем на 5%!\n")
+            if price == df2['open'].rolling(10).min():
+                print(f"Цена по акции {df.iloc[i, 0]} самая низкая за последние 10 дней!\n")
+            if price == df2['open'].rolling(10).max():
+                print(f"Цена по акции {df.iloc[i, 0]} самая высокая за последние 10 дней!\n")
             return price
 
 
@@ -29,8 +35,6 @@ async def scheduler():
 
 async def on_startup(_):
     asyncio.create_task(scheduler())
-
-dp = Dispatcher(bot)
 
 dp = Dispatcher(bot)
 
