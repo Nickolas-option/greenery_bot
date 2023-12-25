@@ -175,6 +175,48 @@ async def save_stock_alert(telegram_id, current_datetime, stock_name, current_pr
 
     table.put_item(Item=stock_data)
 
+async def check_stocks(message: types.Message):
+
+    telegram_id = str(message.from_user.id)
+
+
+    table = dynamodb.Table('StockAlerts')
+    response = table.query(
+        KeyConditionExpression=Key('telegram_id').eq(telegram_id)
+    )
+    stock_alerts = response.get('Items', [])
+
+    if not stock_alerts:
+        await message.reply("Вы не мониторите никакие стоки.")
+        return
+
+
+    results = []
+    for stock_alert in stock_alerts:
+        stock_name = stock_alert['stock_name']
+        stock_symbol = stock_name.upper()
+        current_price = stock_info.get_live_price(stock_symbol)
+
+        if current_price is not None:
+            percentage = Decimal(stock_alert['percentage'])
+            sign = int(stock_alert['sign'])
+
+
+            is_higher = current_price > (1 + percentage / 100) * stock_alert['current_price']
+            is_lower = current_price < (1 - percentage / 100) * stock_alert['current_price']
+
+            result_message = f"Название: {stock_name}\nТекущая цена: ${current_price:.2f}\n"
+
+            if sign == 1 and is_higher:
+                result_message += f"Цена выше более чем на {percentage}%.\n"
+            elif sign == -1 and is_lower:
+                result_message += f"Цена меньше более чем на {percentage}%.\n"
+            else:
+                result_message += f"Цена не сдвинулась на {percentage}%.\n"
+
+            results.append(result_message)
+
+    await message.reply("\n".join(results))
 
 async def start_monitoring(message: types.Message):
     try:
@@ -235,6 +277,7 @@ async def help_command(message: types.Message):
                 "/moment_price - Получить текущую стоимость акции👀\n" \
                 "/stock_history - Получить график стоимости акции📈\n" \
                 "/start_monitoring - Поставить акцию на отслеживание🔎\n" \
+                "/check - Посмотреть процент изменения отслеживаемых акций💯\n" \
                 "/predict_price - Получить предсказание стоимости акции🪄\n" \
                 "/parrot - Посмотреть на попугая🦜\n" \
                 "/help - Показать это сообщение🤯"
@@ -460,6 +503,7 @@ async def register_handlers(dp: Dispatcher):
     dp.register_message_handler(get_stock_history, commands=['stock_history'])
     dp.register_message_handler(get_stock_predict, commands=['predict_price'])
     dp.register_message_handler(start_monitoring, commands=['start_monitoring'])
+    dp.register_message_handler(check_stocks, commands=['check']) 
     dp.register_message_handler(unknown_message)
     log.debug('Handlers are registered.')
 
